@@ -39,6 +39,10 @@ public:
 	void Play(CFURLRef url);
 	void PlayAt(CFURLRef url, const AudioTimeStamp& startTime);
 
+	void GetInputFormat(AudioStreamBasicDescription& format);
+	void GetPlayerFormat(AudioStreamBasicDescription& format);
+	void GetOutputFormat(AudioStreamBasicDescription& format);
+
 	void SetInputRecordingPath(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
 	void SetPlayerRecordingPath(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
 	void SetOutputRecordingPath(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);

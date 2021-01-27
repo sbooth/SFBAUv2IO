@@ -258,6 +258,27 @@ void SFBAUv2IO::PlayAt(CFURLRef url, const AudioTimeStamp& startTime)
 	assert(result == noErr);
 }
 
+void SFBAUv2IO::GetInputFormat(AudioStreamBasicDescription& format)
+{
+	UInt32 size = sizeof(format);
+	auto result = AudioUnitGetProperty(mInputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &format, &size);
+	assert(result == noErr);
+}
+
+void SFBAUv2IO::GetPlayerFormat(AudioStreamBasicDescription& format)
+{
+	UInt32 size = sizeof(format);
+	auto result = AudioUnitGetProperty(mPlayerUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, &size);
+	assert(result == noErr);
+}
+
+void SFBAUv2IO::GetOutputFormat(AudioStreamBasicDescription& format)
+{
+	UInt32 size = sizeof(format);
+	auto result = AudioUnitGetProperty(mOutputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, &size);
+	assert(result == noErr);
+}
+
 void SFBAUv2IO::SetInputRecordingPath(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format)
 {
 	mInputRecorder = std::make_unique<SFBAudioUnitRecorder>(mInputUnit, url, fileType, format, 1);
@@ -481,6 +502,13 @@ void SFBAUv2IO::BuildGraph()
 	assert(result == noErr);
 	result = AudioUnitSetParameter(mMixerUnit, kMultiChannelMixerParam_Volume, kAudioUnitScope_Output, 0, 1, 0);
 	assert(result == noErr);
+
+#if DEBUG
+	result = AudioUnitSetParameter(mMixerUnit, kMultiChannelMixerParam_Pan, kAudioUnitScope_Input, 0, 1, 0);
+	assert(result == noErr);
+	result = AudioUnitSetParameter(mMixerUnit, kMultiChannelMixerParam_Pan, kAudioUnitScope_Input, 1, -1, 0);
+	assert(result == noErr);
+#endif
 }
 
 UInt32 SFBAUv2IO::MinimumInputLatency() const
