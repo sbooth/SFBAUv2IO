@@ -23,6 +23,32 @@ struct ::std::default_delete<OpaqueExtAudioFile> {
 
 namespace {
 	const size_t kScheduledAudioSliceCount = 16;
+
+	SFBAudioBufferList ReadFileContents(CFURLRef url, const AudioStreamBasicDescription& format)
+	{
+		ExtAudioFileRef eaf;
+		auto result = ExtAudioFileOpenURL(url, &eaf);
+		assert(result == noErr);
+
+		auto eaf_ptr = std::unique_ptr<OpaqueExtAudioFile>(eaf);
+
+		result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(format), &format);
+		assert(result == noErr);
+
+		SInt64 frameLength;
+		UInt size = sizeof(frameLength);
+		result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileLengthFrames, &size, &frameLength);
+		assert(result == noErr);
+
+		SFBAudioBufferList abl;
+		assert(abl.Allocate(format, static_cast<UInt32>(frameLength)));
+
+		UInt32 frames = static_cast<UInt32>(frameLength);
+		result = ExtAudioFileRead(eaf, &frames, abl);
+		assert(result == noErr);
+
+		return abl;
+	}
 }
 
 class SFBScheduledAudioSlice : public ScheduledAudioSlice
@@ -194,25 +220,20 @@ bool SFBAUv2IO::InputIsRunning() const
 
 void SFBAUv2IO::Play(CFURLRef url)
 {
-	ExtAudioFileRef eaf;
-	auto result = ExtAudioFileOpenURL(url, &eaf);
-	assert(result == noErr);
-	auto eaf_ptr = std::unique_ptr<OpaqueExtAudioFile>(eaf);
+	AudioTimeStamp ts{};
+	FillOutAudioTimeStampWithSampleTime(ts, -1);
+	PlayAt(url, ts);
+}
+
+void SFBAUv2IO::PlayAt(CFURLRef url, const AudioTimeStamp& startTime)
+{
 	SFBAudioFormat format;
 	UInt32 size = sizeof(format);
-	result = AudioUnitGetProperty(mPlayerUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, &size);
+	auto result = AudioUnitGetProperty(mPlayerUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, &size);
 	assert(result == noErr);
-	result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(format), &format);
-	assert(result == noErr);
-	SInt64 frameLength;
-	size = sizeof(frameLength);
-	result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileLengthFrames, &size, &frameLength);
-	assert(result == noErr);
-	AudioBufferList *abl = SFBAllocateAudioBufferList(format, static_cast<UInt32>(frameLength));
-	assert(abl);
-	UInt32 frames = static_cast<UInt32>(frameLength);
-	result = ExtAudioFileRead(eaf, &frames, abl);
-	assert(result == noErr);
+
+	auto abl = ReadFileContents(url, format);
+
 	SFBScheduledAudioSlice *slice = nullptr;
 	for(auto i = 0; i < kScheduledAudioSliceCount; ++i) {
 		if(mScheduledAudioSlices[i].mAvailable) {
@@ -221,18 +242,19 @@ void SFBAUv2IO::Play(CFURLRef url)
 		}
 	}
 	assert(slice);
+
 	slice->Clear();
 	slice->mTimeStamp				= AudioTimeStamp{};
 	slice->mCompletionProc			= ScheduledAudioSliceCompletionProc;
 	slice->mCompletionProcUserData	= this;
-	slice->mNumberFrames			= frames;
-	slice->mBufferList				= abl;
+	slice->mNumberFrames			= abl.FrameLength();
+	slice->mBufferList				= abl.RelinquishABL();
 	slice->mAvailable 				= false;
+
 	result = AudioUnitSetProperty(mPlayerUnit, kAudioUnitProperty_ScheduleAudioSlice, kAudioUnitScope_Global, 0, slice, sizeof(*slice));
 	assert(result == noErr);
-	AudioTimeStamp ts{};
-	FillOutAudioTimeStampWithSampleTime(ts, -1);
-	result = AudioUnitSetProperty(mPlayerUnit, kAudioUnitProperty_ScheduleStartTimeStamp, kAudioUnitScope_Global, 0, &ts, sizeof(ts));
+
+	result = AudioUnitSetProperty(mPlayerUnit, kAudioUnitProperty_ScheduleStartTimeStamp, kAudioUnitScope_Global, 0, &startTime, sizeof(startTime));
 	assert(result == noErr);
 }
 
@@ -527,7 +549,7 @@ OSStatus SFBAUv2IO::InputRenderCallback(void *inRefCon, AudioUnitRenderActionFla
 	assert(result == noErr);
 
 	if(!THIS->mInputRingBuffer.Write(THIS->mInputBufferList, inNumberFrames, inTimeStamp->mSampleTime))
-		os_log_debug(OS_LOG_DEFAULT, "SFBRingBuffer::Write failed at sample time %.0f", inTimeStamp->mSampleTime);
+		os_log_debug(OS_LOG_DEFAULT, "SFBCARingBuffer::Write failed at sample time %.0f", inTimeStamp->mSampleTime);
 
 	return noErr;
 }
@@ -547,12 +569,10 @@ OSStatus SFBAUv2IO::OutputRenderCallback(void *inRefCon, AudioUnitRenderActionFl
 	if(THIS->mFirstOutputTime < 0) {
 		THIS->mFirstOutputTime = inTimeStamp->mSampleTime;
 		auto delta = THIS->mFirstInputTime - THIS->mFirstOutputTime;
-		printf("delta = %.0f\n", delta);
-		if(delta < 0)
-			THIS->mLatency -= delta;
-		else
-			THIS->mLatency = -delta + THIS->mLatency;
-		printf("latency = %.0f\n", THIS->mLatency);
+		THIS->mLatency -= delta;
+#if DEBUG
+		os_log_debug(OS_LOG_DEFAULT, "latency = %.0f\n", THIS->mLatency);
+#endif
 		*ioActionFlags = kAudioUnitRenderAction_OutputIsSilence;
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex)
 			memset(static_cast<int8_t *>(ioData->mBuffers[bufferIndex].mData), 0, ioData->mBuffers[bufferIndex].mDataByteSize);
@@ -571,7 +591,7 @@ OSStatus SFBAUv2IO::MixerInputRenderCallback(void *inRefCon, AudioUnitRenderActi
 
 	auto adjustedTimeStamp = inTimeStamp->mSampleTime - THIS->mLatency;
 	if(!THIS->mInputRingBuffer.Read(ioData, inNumberFrames, adjustedTimeStamp)) {
-		os_log_debug(OS_LOG_DEFAULT, "SFBRingBuffer::Read failed at sample time %.0f", adjustedTimeStamp);
+		os_log_debug(OS_LOG_DEFAULT, "SFBCARingBuffer::Read failed at sample time %.0f", adjustedTimeStamp);
 		*ioActionFlags = kAudioUnitRenderAction_OutputIsSilence;
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex)
 		memset(static_cast<int8_t *>(ioData->mBuffers[bufferIndex].mData), 0, ioData->mBuffers[bufferIndex].mDataByteSize);

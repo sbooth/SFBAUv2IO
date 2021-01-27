@@ -37,6 +37,7 @@ public:
 	bool InputIsRunning() const;
 
 	void Play(CFURLRef url);
+	void PlayAt(CFURLRef url, const AudioTimeStamp& startTime);
 
 	void SetInputRecordingPath(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
 	void SetPlayerRecordingPath(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
