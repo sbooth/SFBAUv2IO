@@ -1,0 +1,405 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		32971F0C25BC6D840027F236 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 32971F0B25BC6D840027F236 /* AppDelegate.m */; };
+		32971F0F25BC6D840027F236 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32971F0E25BC6D840027F236 /* ViewController.mm */; };
+		32971F1125BC6D850027F236 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 32971F1025BC6D850027F236 /* Assets.xcassets */; };
+		32971F1425BC6D850027F236 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 32971F1225BC6D850027F236 /* Main.storyboard */; };
+		32971F1725BC6D850027F236 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 32971F1625BC6D850027F236 /* main.m */; };
+		32971F2125BC6DA60027F236 /* SFBAUv2IO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32971F1F25BC6DA60027F236 /* SFBAUv2IO.cpp */; };
+		32971F2625BC9A8E0027F236 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32971F2525BC9A8E0027F236 /* AudioToolbox.framework */; };
+		32971F2925BC9A9F0027F236 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32971F2825BC9A9F0027F236 /* CoreAudio.framework */; };
+		32971FD925BD304A0027F236 /* Tones.wav in Resources */ = {isa = PBXBuildFile; fileRef = 32971FD825BD304A0027F236 /* Tones.wav */; };
+		32EEAC2E25C1E62B00D69A91 /* SFBAudioBufferList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EEAC2025C1E62B00D69A91 /* SFBAudioBufferList.cpp */; };
+		32EEAC2F25C1E62B00D69A91 /* SFBCARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EEAC2325C1E62B00D69A91 /* SFBCARingBuffer.cpp */; };
+		32EEAC3025C1E62B00D69A91 /* SFBAudioRingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EEAC2425C1E62B00D69A91 /* SFBAudioRingBuffer.cpp */; };
+		32EEAC3125C1E62B00D69A91 /* SFBAudioChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EEAC2525C1E62B00D69A91 /* SFBAudioChannelLayout.cpp */; };
+		32EEAC3325C1E62B00D69A91 /* SFBAudioFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EEAC2D25C1E62B00D69A91 /* SFBAudioFormat.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		32971F0725BC6D840027F236 /* SFBAUv2IO.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SFBAUv2IO.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		32971F0A25BC6D840027F236 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		32971F0B25BC6D840027F236 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		32971F0D25BC6D840027F236 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		32971F0E25BC6D840027F236 /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
+		32971F1025BC6D850027F236 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		32971F1325BC6D850027F236 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		32971F1525BC6D850027F236 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		32971F1625BC6D850027F236 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		32971F1F25BC6DA60027F236 /* SFBAUv2IO.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SFBAUv2IO.cpp; sourceTree = "<group>"; };
+		32971F2025BC6DA60027F236 /* SFBAUv2IO.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SFBAUv2IO.hpp; sourceTree = "<group>"; };
+		32971F2525BC9A8E0027F236 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		32971F2825BC9A9F0027F236 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		32971FD825BD304A0027F236 /* Tones.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Tones.wav; sourceTree = "<group>"; };
+		32CE801825BE2F9800AD9FFA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		32EEAC2025C1E62B00D69A91 /* SFBAudioBufferList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SFBAudioBufferList.cpp; sourceTree = "<group>"; };
+		32EEAC2225C1E62B00D69A91 /* SFBAudioFormat.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBAudioFormat.hpp; sourceTree = "<group>"; };
+		32EEAC2325C1E62B00D69A91 /* SFBCARingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SFBCARingBuffer.cpp; sourceTree = "<group>"; };
+		32EEAC2425C1E62B00D69A91 /* SFBAudioRingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SFBAudioRingBuffer.cpp; sourceTree = "<group>"; };
+		32EEAC2525C1E62B00D69A91 /* SFBAudioChannelLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SFBAudioChannelLayout.cpp; sourceTree = "<group>"; };
+		32EEAC2625C1E62B00D69A91 /* SFBAudioUnitRecorder.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBAudioUnitRecorder.hpp; sourceTree = "<group>"; };
+		32EEAC2725C1E62B00D69A91 /* SFBCARingBuffer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBCARingBuffer.hpp; sourceTree = "<group>"; };
+		32EEAC2825C1E62B00D69A91 /* SFBCFWrapper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBCFWrapper.hpp; sourceTree = "<group>"; };
+		32EEAC2925C1E62B00D69A91 /* SFBAudioRingBuffer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBAudioRingBuffer.hpp; sourceTree = "<group>"; };
+		32EEAC2A25C1E62B00D69A91 /* SFBAudioChannelLayout.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBAudioChannelLayout.hpp; sourceTree = "<group>"; };
+		32EEAC2B25C1E62B00D69A91 /* SFBAudioBufferList.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBAudioBufferList.hpp; sourceTree = "<group>"; };
+		32EEAC2D25C1E62B00D69A91 /* SFBAudioFormat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SFBAudioFormat.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		32971F0425BC6D840027F236 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32971F2925BC9A9F0027F236 /* CoreAudio.framework in Frameworks */,
+				32971F2625BC9A8E0027F236 /* AudioToolbox.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		32971EFE25BC6D840027F236 = {
+			isa = PBXGroup;
+			children = (
+				32EEAC1F25C1E62B00D69A91 /* SFBAudioUtilities */,
+				32971F0925BC6D840027F236 /* SFBAUv2IO */,
+				32971F0825BC6D840027F236 /* Products */,
+				32971F2425BC9A8E0027F236 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		32971F0825BC6D840027F236 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				32971F0725BC6D840027F236 /* SFBAUv2IO.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		32971F0925BC6D840027F236 /* SFBAUv2IO */ = {
+			isa = PBXGroup;
+			children = (
+				32971F0A25BC6D840027F236 /* AppDelegate.h */,
+				32971F0B25BC6D840027F236 /* AppDelegate.m */,
+				32971F0D25BC6D840027F236 /* ViewController.h */,
+				32971F0E25BC6D840027F236 /* ViewController.mm */,
+				32971F2025BC6DA60027F236 /* SFBAUv2IO.hpp */,
+				32971F1F25BC6DA60027F236 /* SFBAUv2IO.cpp */,
+				32971F1625BC6D850027F236 /* main.m */,
+				32971F1525BC6D850027F236 /* Info.plist */,
+				32971F1225BC6D850027F236 /* Main.storyboard */,
+				32971FD825BD304A0027F236 /* Tones.wav */,
+				32971F1025BC6D850027F236 /* Assets.xcassets */,
+			);
+			path = SFBAUv2IO;
+			sourceTree = "<group>";
+		};
+		32971F2425BC9A8E0027F236 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				32CE801825BE2F9800AD9FFA /* Accelerate.framework */,
+				32971F2825BC9A9F0027F236 /* CoreAudio.framework */,
+				32971F2525BC9A8E0027F236 /* AudioToolbox.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		32EEAC1F25C1E62B00D69A91 /* SFBAudioUtilities */ = {
+			isa = PBXGroup;
+			children = (
+				32EEAC2B25C1E62B00D69A91 /* SFBAudioBufferList.hpp */,
+				32EEAC2025C1E62B00D69A91 /* SFBAudioBufferList.cpp */,
+				32EEAC2A25C1E62B00D69A91 /* SFBAudioChannelLayout.hpp */,
+				32EEAC2525C1E62B00D69A91 /* SFBAudioChannelLayout.cpp */,
+				32EEAC2225C1E62B00D69A91 /* SFBAudioFormat.hpp */,
+				32EEAC2D25C1E62B00D69A91 /* SFBAudioFormat.cpp */,
+				32EEAC2925C1E62B00D69A91 /* SFBAudioRingBuffer.hpp */,
+				32EEAC2425C1E62B00D69A91 /* SFBAudioRingBuffer.cpp */,
+				32EEAC2625C1E62B00D69A91 /* SFBAudioUnitRecorder.hpp */,
+				32EEAC2725C1E62B00D69A91 /* SFBCARingBuffer.hpp */,
+				32EEAC2325C1E62B00D69A91 /* SFBCARingBuffer.cpp */,
+				32EEAC2825C1E62B00D69A91 /* SFBCFWrapper.hpp */,
+			);
+			name = SFBAudioUtilities;
+			path = SFBAudioUtilities/SFBAudioUtilities;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		32971F0625BC6D840027F236 /* SFBAUv2IO */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 32971F1B25BC6D850027F236 /* Build configuration list for PBXNativeTarget "SFBAUv2IO" */;
+			buildPhases = (
+				32971F0325BC6D840027F236 /* Sources */,
+				32971F0425BC6D840027F236 /* Frameworks */,
+				32971F0525BC6D840027F236 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SFBAUv2IO;
+			productName = AUHAL;
+			productReference = 32971F0725BC6D840027F236 /* SFBAUv2IO.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		32971EFF25BC6D840027F236 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1230;
+				TargetAttributes = {
+					32971F0625BC6D840027F236 = {
+						CreatedOnToolsVersion = 12.3;
+					};
+				};
+			};
+			buildConfigurationList = 32971F0225BC6D840027F236 /* Build configuration list for PBXProject "SFBAUv2IO" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 32971EFE25BC6D840027F236;
+			productRefGroup = 32971F0825BC6D840027F236 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				32971F0625BC6D840027F236 /* SFBAUv2IO */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		32971F0525BC6D840027F236 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32971FD925BD304A0027F236 /* Tones.wav in Resources */,
+				32971F1125BC6D850027F236 /* Assets.xcassets in Resources */,
+				32971F1425BC6D850027F236 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		32971F0325BC6D840027F236 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32971F0F25BC6D840027F236 /* ViewController.mm in Sources */,
+				32EEAC3325C1E62B00D69A91 /* SFBAudioFormat.cpp in Sources */,
+				32971F1725BC6D850027F236 /* main.m in Sources */,
+				32971F0C25BC6D840027F236 /* AppDelegate.m in Sources */,
+				32EEAC3025C1E62B00D69A91 /* SFBAudioRingBuffer.cpp in Sources */,
+				32971F2125BC6DA60027F236 /* SFBAUv2IO.cpp in Sources */,
+				32EEAC2E25C1E62B00D69A91 /* SFBAudioBufferList.cpp in Sources */,
+				32EEAC3125C1E62B00D69A91 /* SFBAudioChannelLayout.cpp in Sources */,
+				32EEAC2F25C1E62B00D69A91 /* SFBCARingBuffer.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		32971F1225BC6D850027F236 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				32971F1325BC6D850027F236 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		32971F1925BC6D850027F236 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		32971F1A25BC6D850027F236 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		32971F1C25BC6D850027F236 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = SFBAUv2IO/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AUv2IO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+			};
+			name = Debug;
+		};
+		32971F1D25BC6D850027F236 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = SFBAUv2IO/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AUv2IO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		32971F0225BC6D840027F236 /* Build configuration list for PBXProject "SFBAUv2IO" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				32971F1925BC6D850027F236 /* Debug */,
+				32971F1A25BC6D850027F236 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		32971F1B25BC6D850027F236 /* Build configuration list for PBXNativeTarget "SFBAUv2IO" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				32971F1C25BC6D850027F236 /* Debug */,
+				32971F1D25BC6D850027F236 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 32971EFF25BC6D840027F236 /* Project object */;
+}
