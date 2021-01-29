@@ -29,7 +29,7 @@ public:
 	~SFBAUv2IO();
 
 	void Start();
-	void StartAt(const AudioTimeStamp& startTime);
+	void StartAt(const AudioTimeStamp& timeStamp);
 	void Stop();
 
 	bool IsRunning() const;
@@ -37,15 +37,15 @@ public:
 	bool InputIsRunning() const;
 
 	void Play(CFURLRef url);
-	void PlayAt(CFURLRef url, const AudioTimeStamp& startTime);
+	void PlayAt(CFURLRef url, const AudioTimeStamp& timeStamp);
 
 	void GetInputFormat(AudioStreamBasicDescription& format);
 	void GetPlayerFormat(AudioStreamBasicDescription& format);
 	void GetOutputFormat(AudioStreamBasicDescription& format);
 
-	void SetInputRecordingPath(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
-	void SetPlayerRecordingPath(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
-	void SetOutputRecordingPath(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
+	void SetInputRecordingURL(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
+	void SetPlayerRecordingURL(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
+	void SetOutputRecordingURL(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format);
 
 private:
 
@@ -75,7 +75,7 @@ private:
 
 	std::atomic<double> mFirstInputTime;
 	std::atomic<double> mFirstOutputTime;
-	Float64 mLatency;
+	Float64 mThroughLatency;
 
 	SFBAudioBufferList mInputBufferList;
 	SFBCARingBuffer mInputRingBuffer;
