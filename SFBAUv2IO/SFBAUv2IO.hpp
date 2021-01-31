@@ -1,7 +1,7 @@
-/*
- * Copyright (c) 2021 Stephen F. Booth <me@sbooth.org>
- * MIT license
- */
+//
+// Copyright (c) 2021 Stephen F. Booth <me@sbooth.org>
+// MIT license
+//
 
 #pragma once
 
@@ -25,6 +25,12 @@ public:
 
 	SFBAUv2IO();
 	SFBAUv2IO(AudioObjectID inputDevice, AudioObjectID outputDevice);
+
+	// This class is non-copyable
+	SFBAUv2IO(const SFBAUv2IO& rhs) = delete;
+
+	// This class is non-assignable
+	SFBAUv2IO& operator=(const SFBAUv2IO& rhs) = delete;
 
 	~SFBAUv2IO();
 
@@ -73,8 +79,8 @@ private:
 	AudioUnit mMixerUnit;
 	AudioUnit mOutputUnit;
 
-	std::atomic<double> mFirstInputTime;
-	std::atomic<double> mFirstOutputTime;
+	std::atomic<double> mFirstInputSampleTime;
+	std::atomic<double> mFirstOutputSampleTime;
 	Float64 mThroughLatency;
 
 	SFBAudioBufferList mInputBufferList;
