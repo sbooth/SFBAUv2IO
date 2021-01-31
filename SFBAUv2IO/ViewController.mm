@@ -26,20 +26,20 @@
 
 	SFBAudioStreamBasicDescription format;
 	_audioIO->GetInputFormat(format);
-	
+
 	NSURL *inputRecordingURL = [temporaryDirectory URLByAppendingPathComponent:@"input_recording.caf"];
 //	NSLog(@"Recording input audio unit output to %@", inputRecordingURL);
-	_audioIO->SetInputRecordingURL((__bridge CFURLRef)inputRecordingURL, kAudioFileCAFType, SFBAudioStreamBasicDescription(kSFBCommonPCMFormatInt16, format.mSampleRate, format.ChannelCount(), true));
+	_audioIO->SetInputRecordingURL((__bridge CFURLRef)inputRecordingURL, kAudioFileCAFType, SFBAudioStreamBasicDescription(SFBCommonPCMFormat::int16, format.mSampleRate, format.ChannelCount(), true));
 
 	_audioIO->GetPlayerFormat(format);
 	NSURL *playerRecordingURL = [temporaryDirectory URLByAppendingPathComponent:@"player_recording.caf"];
 //	NSLog(@"Recording player audio unit output to %@", playerRecordingURL);
-	_audioIO->SetPlayerRecordingURL((__bridge CFURLRef)playerRecordingURL, kAudioFileCAFType, SFBAudioStreamBasicDescription(kSFBCommonPCMFormatInt16, format.mSampleRate, format.ChannelCount(), true));
+	_audioIO->SetPlayerRecordingURL((__bridge CFURLRef)playerRecordingURL, kAudioFileCAFType, SFBAudioStreamBasicDescription(SFBCommonPCMFormat::int16, format.mSampleRate, format.ChannelCount(), true));
 
 	_audioIO->GetOutputFormat(format);
 	NSURL *outputRecordingURL = [temporaryDirectory URLByAppendingPathComponent:@"output_recording.caf"];
 //	NSLog(@"Recording output audio unit output to %@", outputRecordingURL);
-	_audioIO->SetOutputRecordingURL((__bridge CFURLRef)outputRecordingURL, kAudioFileCAFType, SFBAudioStreamBasicDescription(kSFBCommonPCMFormatInt16, format.mSampleRate, format.ChannelCount(), true));
+	_audioIO->SetOutputRecordingURL((__bridge CFURLRef)outputRecordingURL, kAudioFileCAFType, SFBAudioStreamBasicDescription(SFBCommonPCMFormat::int16, format.mSampleRate, format.ChannelCount(), true));
 }
 
 - (IBAction)start:(id)sender {
