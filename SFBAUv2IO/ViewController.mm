@@ -1,7 +1,7 @@
-/*
- * Copyright (c) 2021 Stephen F. Booth <me@sbooth.org>
- * MIT license
- */
+//
+// Copyright (c) 2021 Stephen F. Booth <me@sbooth.org>
+// MIT license
+//
 
 #import <memory>
 
@@ -24,17 +24,22 @@
 
 	NSURL *temporaryDirectory = [NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES];
 
+	SFBAudioStreamBasicDescription format;
+	_audioIO->GetInputFormat(format);
+	
 	NSURL *inputRecordingURL = [temporaryDirectory URLByAppendingPathComponent:@"input_recording.caf"];
-	NSLog(@"Recording input audio unit output to %@", inputRecordingURL);
-	_audioIO->SetInputRecordingPath((__bridge CFURLRef)inputRecordingURL, kAudioFileCAFType, SFBAudioFormat(kSFBCommonPCMFormatInt16, 44100, 2, true));
+//	NSLog(@"Recording input audio unit output to %@", inputRecordingURL);
+	_audioIO->SetInputRecordingURL((__bridge CFURLRef)inputRecordingURL, kAudioFileCAFType, SFBAudioStreamBasicDescription(kSFBCommonPCMFormatInt16, format.mSampleRate, format.ChannelCount(), true));
 
+	_audioIO->GetPlayerFormat(format);
 	NSURL *playerRecordingURL = [temporaryDirectory URLByAppendingPathComponent:@"player_recording.caf"];
-	NSLog(@"Recording player audio unit output to %@", playerRecordingURL);
-	_audioIO->SetPlayerRecordingPath((__bridge CFURLRef)playerRecordingURL, kAudioFileCAFType, SFBAudioFormat(kSFBCommonPCMFormatInt16, 44100, 2, true));
+//	NSLog(@"Recording player audio unit output to %@", playerRecordingURL);
+	_audioIO->SetPlayerRecordingURL((__bridge CFURLRef)playerRecordingURL, kAudioFileCAFType, SFBAudioStreamBasicDescription(kSFBCommonPCMFormatInt16, format.mSampleRate, format.ChannelCount(), true));
 
+	_audioIO->GetOutputFormat(format);
 	NSURL *outputRecordingURL = [temporaryDirectory URLByAppendingPathComponent:@"output_recording.caf"];
-	NSLog(@"Recording output audio unit output to %@", outputRecordingURL);
-	_audioIO->SetOutputRecordingPath((__bridge CFURLRef)outputRecordingURL, kAudioFileCAFType, SFBAudioFormat(kSFBCommonPCMFormatInt16, 44100, 2, true));
+//	NSLog(@"Recording output audio unit output to %@", outputRecordingURL);
+	_audioIO->SetOutputRecordingURL((__bridge CFURLRef)outputRecordingURL, kAudioFileCAFType, SFBAudioStreamBasicDescription(kSFBCommonPCMFormatInt16, format.mSampleRate, format.ChannelCount(), true));
 }
 
 - (IBAction)start:(id)sender {
@@ -58,6 +63,9 @@
 	if(_audioIO->IsRunning()) {
 		NSLog(@"▶️");
 		NSURL *u = [[NSBundle mainBundle] URLForResource:@"Tones" withExtension:@"wav"];
+//		AudioTimeStamp ts;
+//		FillOutAudioTimeStampWithHostTime(ts, AudioGetCurrentHostTime() + AudioConvertNanosToHostTime(NSEC_PER_SEC >> 1));
+//		_audioIO->PlayAt((__bridge CFURLRef)u, ts);
 		_audioIO->Play((__bridge CFURLRef)u);
 	}
 }
