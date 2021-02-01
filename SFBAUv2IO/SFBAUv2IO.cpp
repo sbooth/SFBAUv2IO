@@ -35,9 +35,7 @@ namespace {
 		SFBAudioBufferList abl;
 		if(!abl.Allocate(format, static_cast<UInt32>(frameLength)))
 			throw std::bad_alloc();
-
-		UInt32 frames = static_cast<UInt32>(frameLength);
-		eaf.Read(frames, abl);
+		eaf.Read(abl);
 
 		return abl;
 	}
@@ -318,6 +316,24 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDevice)
 	if(inputDevice == kAudioObjectUnknown)
 		throw std::invalid_argument("inputDevice == kAudioObjectUnknown");
 
+#if DEBUG
+	{
+		AudioObjectPropertyAddress propertyAddress = {
+			.mSelector = kAudioObjectPropertyName,
+			.mScope = kAudioObjectPropertyScopeGlobal,
+			.mElement = kAudioObjectPropertyElementMaster
+		};
+		CFStringRef deviceName;
+		UInt32 size = sizeof(deviceName);
+		auto result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &deviceName);
+		SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioObjectPropertyName)");
+		if(deviceName) {
+			os_log_debug(OS_LOG_DEFAULT, "Using input device %{public}@ (0x%x)", deviceName, inputDevice);
+			CFRelease(deviceName);
+		}
+	}
+#endif
+
 	AudioComponentDescription componentDescription = {
 		.componentType 			= kAudioUnitType_Output,
 		.componentSubType 		= kAudioUnitSubType_HALOutput,
@@ -411,6 +427,24 @@ void SFBAUv2IO::CreateOutputAU(AudioObjectID outputDevice)
 {
 	if(outputDevice == kAudioObjectUnknown)
 		throw std::invalid_argument("outputDevice == kAudioObjectUnknown");
+
+#if DEBUG
+	{
+		AudioObjectPropertyAddress propertyAddress = {
+			.mSelector = kAudioObjectPropertyName,
+			.mScope = kAudioObjectPropertyScopeGlobal,
+			.mElement = kAudioObjectPropertyElementMaster
+		};
+		CFStringRef deviceName;
+		UInt32 size = sizeof(deviceName);
+		auto result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &deviceName);
+		SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioObjectPropertyName)");
+		if(deviceName) {
+			os_log_debug(OS_LOG_DEFAULT, "Using output device %{public}@ (0x%x)", deviceName, outputDevice);
+			CFRelease(deviceName);
+		}
+	}
+#endif
 
 	AudioComponentDescription componentDescription = {
 		.componentType 			= kAudioUnitType_Output,
