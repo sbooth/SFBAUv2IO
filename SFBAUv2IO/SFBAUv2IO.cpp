@@ -14,6 +14,7 @@
 #import <os/log.h>
 
 #import "SFBAudioBufferList.hpp"
+#import "SFBAudioObjectPropertyAddress.hpp"
 #import "SFBAudioStreamBasicDescription.hpp"
 #import "SFBAudioTimeStamp.hpp"
 #import "SFBAudioUnitRecorder.hpp"
@@ -69,11 +70,7 @@ public:
 SFBAUv2IO::SFBAUv2IO()
 : mInputUnit(nullptr), mPlayerUnit(nullptr), mMixerUnit(nullptr), mOutputUnit(nullptr), mFirstInputSampleTime(-1), mFirstOutputSampleTime(-1), mScheduledAudioSlices(nullptr)
 {
-	AudioObjectPropertyAddress addr = {
-		.mSelector = kAudioHardwarePropertyDefaultInputDevice,
-		.mScope = kAudioObjectPropertyScopeGlobal,
-		.mElement = kAudioObjectPropertyElementMaster
-	};
+	SFBAudioObjectPropertyAddress addr(kAudioHardwarePropertyDefaultInputDevice);
 
 	UInt32 size = sizeof(AudioObjectID);
 	AudioObjectID inputDevice;
@@ -318,11 +315,7 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDevice)
 
 #if DEBUG
 	{
-		AudioObjectPropertyAddress propertyAddress = {
-			.mSelector = kAudioObjectPropertyName,
-			.mScope = kAudioObjectPropertyScopeGlobal,
-			.mElement = kAudioObjectPropertyElementMaster
-		};
+		SFBAudioObjectPropertyAddress propertyAddress(kAudioObjectPropertyName);
 		CFStringRef deviceName;
 		UInt32 size = sizeof(deviceName);
 		auto result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &deviceName);
@@ -372,11 +365,7 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDevice)
 	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global, 0, &inputCallback, sizeof(inputCallback));
 	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_SetInputCallback)");
 
-	AudioObjectPropertyAddress theAddress = {
-		.mSelector = kAudioDevicePropertyNominalSampleRate,
-		.mScope = kAudioObjectPropertyScopeGlobal,
-		.mElement = kAudioObjectPropertyElementMaster
-	};
+	SFBAudioObjectPropertyAddress theAddress(kAudioDevicePropertyNominalSampleRate);
 
 	Float64 inputDeviceSampleRate;
 	UInt32 size = sizeof(inputDeviceSampleRate);
@@ -430,11 +419,7 @@ void SFBAUv2IO::CreateOutputAU(AudioObjectID outputDevice)
 
 #if DEBUG
 	{
-		AudioObjectPropertyAddress propertyAddress = {
-			.mSelector = kAudioObjectPropertyName,
-			.mScope = kAudioObjectPropertyScopeGlobal,
-			.mElement = kAudioObjectPropertyElementMaster
-		};
+		SFBAudioObjectPropertyAddress propertyAddress(kAudioObjectPropertyName);
 		CFStringRef deviceName;
 		UInt32 size = sizeof(deviceName);
 		auto result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &deviceName);
@@ -549,17 +534,20 @@ UInt32 SFBAUv2IO::MinimumInputLatency() const
 	auto result = AudioUnitGetProperty(mInputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &inputDevice, &size);
 	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
 
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector 	= kAudioDevicePropertySafetyOffset,
-		.mScope 	= kAudioObjectPropertyScopeInput,
-		.mElement 	= kAudioObjectPropertyElementMaster
-	};
+	SFBAudioObjectPropertyAddress propertyAddress(kAudioDevicePropertySafetyOffset, kAudioObjectPropertyScopeInput);
 
 	UInt32 safetyOffset;
 	size = sizeof(safetyOffset);
 	result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &safetyOffset);
 	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertySafetyOffset)");
 
+	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
+	UInt32 bufferFrameSize;
+	size = sizeof(bufferFrameSize);
+	result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
+	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyBufferFrameSize)");
+
+#if DEBUG
 	propertyAddress.mSelector = kAudioDevicePropertyLatency;
 	UInt32 latency;
 	size = sizeof(latency);
@@ -577,28 +565,15 @@ UInt32 SFBAUv2IO::MinimumInputLatency() const
 	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyStreams)");
 
 	for(auto stream : streams) {
-		AudioObjectPropertyAddress propertyAddress = {
-			.mSelector 	= kAudioStreamPropertyLatency,
-			.mScope 	= kAudioObjectPropertyScopeGlobal,
-			.mElement 	= kAudioObjectPropertyElementMaster
-		};
+		SFBAudioObjectPropertyAddress propertyAddress(kAudioStreamPropertyLatency);
 		UInt32 streamLatency;
 		size = sizeof(streamLatency);
 		result = AudioObjectGetPropertyData(stream, &propertyAddress, 0, nullptr, &size, &streamLatency);
 		SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioStreamPropertyLatency)");
 
-#if DEBUG
 		os_log_debug(OS_LOG_DEFAULT, "Input stream 0x%x latency %d", stream, streamLatency);
-#endif
 	}
 
-	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
-	UInt32 bufferFrameSize;
-	size = sizeof(bufferFrameSize);
-	result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyBufferFrameSize)");
-
-#if DEBUG
 	os_log_debug(OS_LOG_DEFAULT, "Minimum input latency %d (%d safety offset + %d buffer size) [device latency %d]", safetyOffset + bufferFrameSize, safetyOffset, bufferFrameSize, latency);
 #endif
 
@@ -612,17 +587,20 @@ UInt32 SFBAUv2IO::MinimumOutputLatency() const
 	auto result = AudioUnitGetProperty(mOutputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &outputDevice, &size);
 	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
 
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector 	= kAudioDevicePropertySafetyOffset,
-		.mScope 	= kAudioObjectPropertyScopeOutput,
-		.mElement 	= kAudioObjectPropertyElementMaster
-	};
+	SFBAudioObjectPropertyAddress propertyAddress(kAudioDevicePropertySafetyOffset, kAudioObjectPropertyScopeOutput);
 
 	UInt32 safetyOffset;
 	size = sizeof(safetyOffset);
 	result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &safetyOffset);
 	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertySafetyOffset)");
 
+	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
+	UInt32 bufferFrameSize;
+	size = sizeof(bufferFrameSize);
+	result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
+	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyBufferFrameSize)");
+
+#if DEBUG
 	propertyAddress.mSelector = kAudioDevicePropertyLatency;
 	UInt32 latency;
 	size = sizeof(latency);
@@ -640,28 +618,15 @@ UInt32 SFBAUv2IO::MinimumOutputLatency() const
 	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyStreams)");
 
 	for(auto stream : streams) {
-		AudioObjectPropertyAddress propertyAddress = {
-			.mSelector 	= kAudioStreamPropertyLatency,
-			.mScope 	= kAudioObjectPropertyScopeGlobal,
-			.mElement 	= kAudioObjectPropertyElementMaster
-		};
+		SFBAudioObjectPropertyAddress propertyAddress(kAudioStreamPropertyLatency);
 		UInt32 streamLatency;
 		size = sizeof(streamLatency);
 		result = AudioObjectGetPropertyData(stream, &propertyAddress, 0, nullptr, &size, &streamLatency);
 		SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioStreamPropertyLatency)");
 
-#if DEBUG
 		os_log_debug(OS_LOG_DEFAULT, "Output stream 0x%x latency %d", stream, streamLatency);
-#endif
 	}
 
-	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
-	UInt32 bufferFrameSize;
-	size = sizeof(bufferFrameSize);
-	result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyBufferFrameSize)");
-
-#if DEBUG
 	os_log_debug(OS_LOG_DEFAULT, "Minimum output latency %d (%d safety offset + %d buffer size) [device latency %d]", safetyOffset + bufferFrameSize, safetyOffset, bufferFrameSize, latency);
 #endif
 
