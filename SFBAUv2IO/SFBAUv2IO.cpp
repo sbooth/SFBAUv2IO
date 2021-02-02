@@ -694,8 +694,8 @@ OSStatus SFBAUv2IO::OutputRenderCallback(void *inRefCon, AudioUnitRenderActionFl
 	// Input not yet running
 	if(THIS->mFirstInputSampleTime < 0) {
 		*ioActionFlags = kAudioUnitRenderAction_OutputIsSilence;
-		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex)
-			std::memset(static_cast<int8_t *>(ioData->mBuffers[bufferIndex].mData), 0, ioData->mBuffers[bufferIndex].mDataByteSize);
+		for(auto i = 0; i < ioData->mNumberBuffers; ++i)
+			std::memset(ioData->mBuffers[i].mData, 0, ioData->mBuffers[i].mDataByteSize);
 		return noErr;
 	}
 
@@ -714,8 +714,8 @@ OSStatus SFBAUv2IO::OutputRenderCallback(void *inRefCon, AudioUnitRenderActionFl
 #endif
 
 		*ioActionFlags = kAudioUnitRenderAction_OutputIsSilence;
-		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex)
-			std::memset(static_cast<int8_t *>(ioData->mBuffers[bufferIndex].mData), 0, ioData->mBuffers[bufferIndex].mDataByteSize);
+		for(auto i = 0; i < ioData->mNumberBuffers; ++i)
+			std::memset(ioData->mBuffers[i].mData, 0, ioData->mBuffers[i].mDataByteSize);
 		return noErr;
 	}
 
