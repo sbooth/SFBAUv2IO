@@ -64,6 +64,10 @@
 		32D8584F25C719F100417769 /* SFBAudioBufferList.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBAudioBufferList.hpp; sourceTree = "<group>"; };
 		32D8585025C719F100417769 /* SFBAudioStreamBasicDescription.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SFBAudioStreamBasicDescription.cpp; sourceTree = "<group>"; };
 		32ED8A6D25C9A76B001441D4 /* SFBAudioObjectPropertyAddress.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SFBAudioObjectPropertyAddress.hpp; sourceTree = "<group>"; };
+		32ED8A7025C9D9E1001441D4 /* SFBHALAudioObject.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SFBHALAudioObject.hpp; sourceTree = "<group>"; };
+		32ED8A7625C9F6E1001441D4 /* SFBHALAudioSystemObject.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SFBHALAudioSystemObject.hpp; sourceTree = "<group>"; };
+		32ED8A7825C9F8AF001441D4 /* SFBHALAudioDevice.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SFBHALAudioDevice.hpp; sourceTree = "<group>"; };
+		32ED8A7A25CA1466001441D4 /* SFBHALAudioStream.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SFBHALAudioStream.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -148,6 +152,10 @@
 				32D8584525C719F100417769 /* SFBCFWrapper.hpp */,
 				32D8584A25C719F100417769 /* SFBDeferredClosure.hpp */,
 				32D8584E25C719F100417769 /* SFBExtAudioFile.hpp */,
+				32ED8A7825C9F8AF001441D4 /* SFBHALAudioDevice.hpp */,
+				32ED8A7025C9D9E1001441D4 /* SFBHALAudioObject.hpp */,
+				32ED8A7A25CA1466001441D4 /* SFBHALAudioStream.hpp */,
+				32ED8A7625C9F6E1001441D4 /* SFBHALAudioSystemObject.hpp */,
 				32D8583D25C719F100417769 /* SFBRingBuffer.hpp */,
 				32D8584D25C719F100417769 /* SFBRingBuffer.cpp */,
 				32D8583C25C719F100417769 /* SFBUnfairLock.hpp */,
