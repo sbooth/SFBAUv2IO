@@ -14,6 +14,7 @@
 
 #import "SFBAudioBufferList.hpp"
 #import "SFBCARingBuffer.hpp"
+#import "SFBHALAudioDevice.hpp"
 
 class SFBAudioUnitRecorder;
 class SFBScheduledAudioSlice;
@@ -23,8 +24,8 @@ class SFBAUv2IO
 	
 public:
 
+	/// Creates a new @c SFBAUv2IO for the default system input and output devices
 	SFBAUv2IO();
-	SFBAUv2IO(AudioObjectID inputDevice, AudioObjectID outputDevice);
 
 	// This class is non-copyable
 	SFBAUv2IO(const SFBAUv2IO& rhs) = delete;
@@ -33,6 +34,19 @@ public:
 	SFBAUv2IO& operator=(const SFBAUv2IO& rhs) = delete;
 
 	~SFBAUv2IO();
+
+	// This class is non-movable
+	SFBAUv2IO(SFBAUv2IO&& rhs) = delete;
+
+	// This class is non-move assignable
+	SFBAUv2IO& operator=(SFBAUv2IO&& rhs) = delete;
+
+
+	SFBAUv2IO(AudioObjectID inputDeviceID, AudioObjectID outputDeviceID);
+
+
+	SFBHALAudioDevice InputDevice() const;
+	SFBHALAudioDevice OutputDevice() const;
 
 	void Start();
 	void StartAt(const AudioTimeStamp& timeStamp);
@@ -55,10 +69,10 @@ public:
 
 private:
 
-	void Initialize(AudioObjectID inputDevice, AudioObjectID outputDevice);
+	void Initialize(AudioObjectID inputDeviceID, AudioObjectID outputDeviceID);
 
-	void CreateInputAU(AudioObjectID inputDevice);
-	void CreateOutputAU(AudioObjectID outputDevice);
+	void CreateInputAU(AudioObjectID inputDeviceID);
+	void CreateOutputAU(AudioObjectID outputDeviceID);
 	void CreateMixerAU();
 	void CreatePlayerAU();
 	void BuildGraph();
@@ -67,7 +81,7 @@ private:
 	UInt32 MinimumOutputLatency() const;
 	inline UInt32 MinimumThroughLatency() const
 	{
-		return MinimumInputLatency() + MinimumOutputLatency();
+		return MinimumOutputLatency() + MinimumInputLatency();
 	}
 
 	std::unique_ptr<SFBAudioUnitRecorder> mInputRecorder;

@@ -19,6 +19,8 @@
 #import "SFBAudioTimeStamp.hpp"
 #import "SFBAudioUnitRecorder.hpp"
 #import "SFBExtAudioFile.hpp"
+#import "SFBHALAudioStream.hpp"
+#import "SFBHALAudioSystemObject.hpp"
 
 namespace {
 	const size_t kScheduledAudioSliceCount = 16;
@@ -70,27 +72,15 @@ public:
 SFBAUv2IO::SFBAUv2IO()
 : mInputUnit(nullptr), mPlayerUnit(nullptr), mMixerUnit(nullptr), mOutputUnit(nullptr), mFirstInputSampleTime(-1), mFirstOutputSampleTime(-1), mScheduledAudioSlices(nullptr)
 {
-	SFBAudioObjectPropertyAddress addr(kAudioHardwarePropertyDefaultInputDevice);
-
-	UInt32 size = sizeof(AudioObjectID);
-	AudioObjectID inputDevice;
-	auto result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, 0, nullptr, &size, &inputDevice);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultInputDevice)");
-
-	addr.mSelector = kAudioHardwarePropertyDefaultOutputDevice;
-	size = sizeof(AudioObjectID);
-	AudioObjectID outputDevice;
-	result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, 0, nullptr, &size, &outputDevice);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice)");
-
-	Initialize(inputDevice, outputDevice);
+	SFBHALAudioSystemObject systemObject;
+	Initialize(systemObject.DefaultInputDevice(), systemObject.DefaultOutputDevice());
 	mScheduledAudioSlices = new SFBScheduledAudioSlice [kScheduledAudioSliceCount];
 }
 
-SFBAUv2IO::SFBAUv2IO(AudioObjectID inputDevice, AudioObjectID outputDevice)
+SFBAUv2IO::SFBAUv2IO(AudioObjectID inputDeviceID, AudioObjectID outputDeviceID)
 : mInputUnit(nullptr), mPlayerUnit(nullptr), mMixerUnit(nullptr), mOutputUnit(nullptr), mFirstInputSampleTime(-1), mFirstOutputSampleTime(-1), mScheduledAudioSlices(nullptr)
 {
-	Initialize(inputDevice, outputDevice);
+	Initialize(inputDeviceID, outputDeviceID);
 	mScheduledAudioSlices = new SFBScheduledAudioSlice [kScheduledAudioSliceCount];
 }
 
@@ -129,6 +119,24 @@ SFBAUv2IO::~SFBAUv2IO()
 	}
 
 	delete [] mScheduledAudioSlices;
+}
+
+SFBHALAudioDevice SFBAUv2IO::InputDevice() const
+{
+	AudioObjectID deviceID;
+	UInt32 size = sizeof(deviceID);
+	auto result = AudioUnitGetProperty(mInputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &size);
+	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
+	return SFBHALAudioDevice(deviceID);
+}
+
+SFBHALAudioDevice SFBAUv2IO::OutputDevice() const
+{
+	AudioObjectID deviceID;
+	UInt32 size = sizeof(deviceID);
+	auto result = AudioUnitGetProperty(mOutputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &size);
+	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
+	return SFBHALAudioDevice(deviceID);
 }
 
 void SFBAUv2IO::Start()
@@ -298,33 +306,26 @@ void SFBAUv2IO::SetOutputRecordingURL(CFURLRef url, AudioFileTypeID fileType, co
 	mOutputRecorder = std::make_unique<SFBAudioUnitRecorder>(mOutputUnit, url, fileType, format);
 }
 
-void SFBAUv2IO::Initialize(AudioObjectID inputDevice, AudioObjectID outputDevice)
+void SFBAUv2IO::Initialize(AudioObjectID inputDeviceID, AudioObjectID outputDeviceID)
 {
-	CreateInputAU(inputDevice);
-	CreateOutputAU(outputDevice);
+	CreateInputAU(inputDeviceID);
+	CreateOutputAU(outputDeviceID);
 	CreateMixerAU();
 	CreatePlayerAU();
 	BuildGraph();
 	mThroughLatency = MinimumThroughLatency();
 }
 
-void SFBAUv2IO::CreateInputAU(AudioObjectID inputDevice)
+void SFBAUv2IO::CreateInputAU(AudioObjectID inputDeviceID)
 {
-	if(inputDevice == kAudioObjectUnknown)
+	if(inputDeviceID == kAudioObjectUnknown)
 		throw std::invalid_argument("inputDevice == kAudioObjectUnknown");
 
+	SFBHALAudioDevice inputDevice(inputDeviceID);
 #if DEBUG
-	{
-		SFBAudioObjectPropertyAddress propertyAddress(kAudioObjectPropertyName);
-		CFStringRef deviceName;
-		UInt32 size = sizeof(deviceName);
-		auto result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &deviceName);
-		SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioObjectPropertyName)");
-		if(deviceName) {
-			os_log_debug(OS_LOG_DEFAULT, "Using input device %{public}@ (0x%x)", deviceName, inputDevice);
-			CFRelease(deviceName);
-		}
-	}
+	auto deviceName = inputDevice.Name();
+	if(deviceName)
+		os_log_debug(OS_LOG_DEFAULT, "Using input device %{public}@ (0x%x)", deviceName.Object(), inputDeviceID);
 #endif
 
 	AudioComponentDescription componentDescription = {
@@ -350,7 +351,7 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDevice)
 	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &enableIO, sizeof(enableIO));
 	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_EnableIO)");
 
-	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &inputDevice, sizeof(inputDevice));
+	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &inputDeviceID, sizeof(inputDeviceID));
 	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice)");
 
 	UInt32 startAtZero = 0;
@@ -367,13 +368,10 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDevice)
 
 	SFBAudioObjectPropertyAddress theAddress(kAudioDevicePropertyNominalSampleRate);
 
-	Float64 inputDeviceSampleRate;
-	UInt32 size = sizeof(inputDeviceSampleRate);
-	result = AudioObjectGetPropertyData(inputDevice, &theAddress, 0, nullptr, &size, &inputDeviceSampleRate);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate)");
+	auto inputDeviceSampleRate = inputDevice.NominalSampleRate();
 
 	SFBAudioStreamBasicDescription inputUnitInputFormat;
-	size = sizeof(inputUnitInputFormat);
+	UInt32 size = sizeof(inputUnitInputFormat);
 	result = AudioUnitGetProperty(mInputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &inputUnitInputFormat, &size);
 	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
 //	CFShow(inputUnitInputFormat.Description("input AU input format:  "));
@@ -412,22 +410,17 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDevice)
 	SFBThrowIfAudioUnitError(result, "AudioUnitInitialize");
 }
 
-void SFBAUv2IO::CreateOutputAU(AudioObjectID outputDevice)
+void SFBAUv2IO::CreateOutputAU(AudioObjectID outputDeviceID)
 {
-	if(outputDevice == kAudioObjectUnknown)
+	if(outputDeviceID == kAudioObjectUnknown)
 		throw std::invalid_argument("outputDevice == kAudioObjectUnknown");
 
 #if DEBUG
 	{
-		SFBAudioObjectPropertyAddress propertyAddress(kAudioObjectPropertyName);
-		CFStringRef deviceName;
-		UInt32 size = sizeof(deviceName);
-		auto result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &deviceName);
-		SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioObjectPropertyName)");
-		if(deviceName) {
-			os_log_debug(OS_LOG_DEFAULT, "Using output device %{public}@ (0x%x)", deviceName, outputDevice);
-			CFRelease(deviceName);
-		}
+		SFBHALAudioDevice outputDevice(outputDeviceID);
+		auto deviceName = outputDevice.Name();
+		if(deviceName)
+			os_log_debug(OS_LOG_DEFAULT, "Using output device %{public}@ (0x%x)", deviceName.Object(), outputDeviceID);
 	}
 #endif
 
@@ -446,7 +439,7 @@ void SFBAUv2IO::CreateOutputAU(AudioObjectID outputDevice)
 	auto result = AudioComponentInstanceNew(component, &mOutputUnit);
 	SFBThrowIfAudioObjectError(result, "AudioComponentInstanceNew");
 
-	result = AudioUnitSetProperty(mOutputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &outputDevice, sizeof(outputDevice));
+	result = AudioUnitSetProperty(mOutputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &outputDeviceID, sizeof(outputDeviceID));
 	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice)");
 
 	UInt32 startAtZero = 0;
@@ -529,49 +522,18 @@ void SFBAUv2IO::BuildGraph()
 
 UInt32 SFBAUv2IO::MinimumInputLatency() const
 {
-	AudioObjectID inputDevice;
-	UInt32 size = sizeof(inputDevice);
-	auto result = AudioUnitGetProperty(mInputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &inputDevice, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
+	auto inputDevice = InputDevice();
 
-	SFBAudioObjectPropertyAddress propertyAddress(kAudioDevicePropertySafetyOffset, kAudioObjectPropertyScopeInput);
-
-	UInt32 safetyOffset;
-	size = sizeof(safetyOffset);
-	result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &safetyOffset);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertySafetyOffset)");
-
-	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
-	UInt32 bufferFrameSize;
-	size = sizeof(bufferFrameSize);
-	result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyBufferFrameSize)");
+	auto safetyOffset = inputDevice.SafetyOffset(SFBHALAudioObjectDirectionalScope::input);
+	auto bufferFrameSize = inputDevice.BufferFrameSize();
 
 #if DEBUG
-	propertyAddress.mSelector = kAudioDevicePropertyLatency;
-	UInt32 latency;
-	size = sizeof(latency);
-	result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &latency);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyLatency)");
-
-	propertyAddress.mSelector = kAudioDevicePropertyStreams;
-	size = 0;
-	result = AudioObjectGetPropertyDataSize(inputDevice, &propertyAddress, 0, nullptr, &size);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreams)");
-
-	auto streamCount = size / sizeof(AudioObjectID);
-	std::vector<AudioObjectID> streams(streamCount);
-	result = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &streams[0]);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyStreams)");
+	auto latency = inputDevice.Latency(SFBHALAudioObjectDirectionalScope::input);
+	auto streams = inputDevice.Streams(SFBHALAudioObjectDirectionalScope::input);
 
 	for(auto stream : streams) {
-		SFBAudioObjectPropertyAddress propertyAddress(kAudioStreamPropertyLatency);
-		UInt32 streamLatency;
-		size = sizeof(streamLatency);
-		result = AudioObjectGetPropertyData(stream, &propertyAddress, 0, nullptr, &size, &streamLatency);
-		SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioStreamPropertyLatency)");
-
-		os_log_debug(OS_LOG_DEFAULT, "Input stream 0x%x latency %d", stream, streamLatency);
+		auto streamLatency = stream.Latency();
+		os_log_debug(OS_LOG_DEFAULT, "Input stream 0x%x latency %d", stream.ObjectID(), streamLatency);
 	}
 
 	os_log_debug(OS_LOG_DEFAULT, "Minimum input latency %d (%d safety offset + %d buffer size) [device latency %d]", safetyOffset + bufferFrameSize, safetyOffset, bufferFrameSize, latency);
@@ -582,49 +544,18 @@ UInt32 SFBAUv2IO::MinimumInputLatency() const
 
 UInt32 SFBAUv2IO::MinimumOutputLatency() const
 {
-	AudioObjectID outputDevice;
-	UInt32 size = sizeof(outputDevice);
-	auto result = AudioUnitGetProperty(mOutputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &outputDevice, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
+	auto outputDevice = OutputDevice();
 
-	SFBAudioObjectPropertyAddress propertyAddress(kAudioDevicePropertySafetyOffset, kAudioObjectPropertyScopeOutput);
-
-	UInt32 safetyOffset;
-	size = sizeof(safetyOffset);
-	result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &safetyOffset);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertySafetyOffset)");
-
-	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
-	UInt32 bufferFrameSize;
-	size = sizeof(bufferFrameSize);
-	result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyBufferFrameSize)");
+	auto safetyOffset = outputDevice.SafetyOffset(SFBHALAudioObjectDirectionalScope::output);
+	auto bufferFrameSize = outputDevice.BufferFrameSize();
 
 #if DEBUG
-	propertyAddress.mSelector = kAudioDevicePropertyLatency;
-	UInt32 latency;
-	size = sizeof(latency);
-	result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &latency);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyLatency)");
-
-	propertyAddress.mSelector = kAudioDevicePropertyStreams;
-	size = 0;
-	result = AudioObjectGetPropertyDataSize(outputDevice, &propertyAddress, 0, nullptr, &size);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreams)");
-
-	auto streamCount = size / sizeof(AudioObjectID);
-	std::vector<AudioObjectID> streams(streamCount);
-	result = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &streams[0]);
-	SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioDevicePropertyStreams)");
+	auto latency = outputDevice.Latency(SFBHALAudioObjectDirectionalScope::output);
+	auto streams = outputDevice.Streams(SFBHALAudioObjectDirectionalScope::output);
 
 	for(auto stream : streams) {
-		SFBAudioObjectPropertyAddress propertyAddress(kAudioStreamPropertyLatency);
-		UInt32 streamLatency;
-		size = sizeof(streamLatency);
-		result = AudioObjectGetPropertyData(stream, &propertyAddress, 0, nullptr, &size, &streamLatency);
-		SFBThrowIfAudioObjectError(result, "AudioObjectGetPropertyData (kAudioStreamPropertyLatency)");
-
-		os_log_debug(OS_LOG_DEFAULT, "Output stream 0x%x latency %d", stream, streamLatency);
+		auto streamLatency = stream.Latency();
+		os_log_debug(OS_LOG_DEFAULT, "Output stream 0x%x latency %d", stream.ObjectID(), streamLatency);
 	}
 
 	os_log_debug(OS_LOG_DEFAULT, "Minimum output latency %d (%d safety offset + %d buffer size) [device latency %d]", safetyOffset + bufferFrameSize, safetyOffset, bufferFrameSize, latency);
@@ -666,13 +597,13 @@ OSStatus SFBAUv2IO::OutputRenderCallback(void *inRefCon, AudioUnitRenderActionFl
 
 	if(THIS->mFirstOutputSampleTime < 0) {
 		THIS->mFirstOutputSampleTime = inTimeStamp->mSampleTime;
-		auto delta = THIS->mFirstInputSampleTime - THIS->mFirstOutputSampleTime;
+		auto delta = THIS->mFirstOutputSampleTime - THIS->mFirstInputSampleTime;
 
 #if DEBUG
-		os_log_debug(OS_LOG_DEFAULT, "input → output sample Δ %.0f\n", delta);
+		os_log_debug(OS_LOG_DEFAULT, "output → input sample Δ %.0f\n", delta);
 #endif
 
-		THIS->mThroughLatency -= delta;
+		THIS->mThroughLatency += delta;
 
 #if DEBUG
 		os_log_debug(OS_LOG_DEFAULT, "Adjusted through latency %.0f\n", THIS->mThroughLatency);
