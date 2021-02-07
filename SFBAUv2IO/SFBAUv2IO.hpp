@@ -12,11 +12,13 @@
 #import <CoreAudio/CoreAudio.h>
 #import <AudioToolbox/AudioToolbox.h>
 
-#import "SFBAudioBufferList.hpp"
+#import "SFBCABufferList.hpp"
 #import "SFBCARingBuffer.hpp"
 #import "SFBHALAudioDevice.hpp"
 
-class SFBAudioUnitRecorder;
+namespace SFB {
+	class AudioUnitRecorder;
+}
 class SFBScheduledAudioSlice;
 
 class SFBAUv2IO
@@ -45,8 +47,8 @@ public:
 	SFBAUv2IO(AudioObjectID inputDeviceID, AudioObjectID outputDeviceID);
 
 
-	SFBHALAudioDevice InputDevice() const;
-	SFBHALAudioDevice OutputDevice() const;
+	SFB::HALAudioDevice InputDevice() const;
+	SFB::HALAudioDevice OutputDevice() const;
 
 	void Start();
 	void StartAt(const AudioTimeStamp& timeStamp);
@@ -84,9 +86,9 @@ private:
 		return MinimumOutputLatency() + MinimumInputLatency();
 	}
 
-	std::unique_ptr<SFBAudioUnitRecorder> mInputRecorder;
-	std::unique_ptr<SFBAudioUnitRecorder> mPlayerRecorder;
-	std::unique_ptr<SFBAudioUnitRecorder> mOutputRecorder;
+	std::unique_ptr<SFB::AudioUnitRecorder> mInputRecorder;
+	std::unique_ptr<SFB::AudioUnitRecorder> mPlayerRecorder;
+	std::unique_ptr<SFB::AudioUnitRecorder> mOutputRecorder;
 
 	AudioUnit mInputUnit;
 	AudioUnit mPlayerUnit;
@@ -97,8 +99,8 @@ private:
 	std::atomic<double> mFirstOutputSampleTime;
 	Float64 mThroughLatency;
 
-	SFBAudioBufferList mInputBufferList;
-	SFBCARingBuffer mInputRingBuffer;
+	SFB::CABufferList mInputBufferList;
+	SFB::CARingBuffer mInputRingBuffer;
 
 	static OSStatus InputRenderCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData);
 	static OSStatus OutputRenderCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData);

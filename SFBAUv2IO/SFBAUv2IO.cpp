@@ -13,35 +13,37 @@
 
 #import <os/log.h>
 
-#import "SFBAudioBufferList.hpp"
-#import "SFBAudioObjectPropertyAddress.hpp"
-#import "SFBAudioStreamBasicDescription.hpp"
-#import "SFBAudioTimeStamp.hpp"
 #import "SFBAudioUnitRecorder.hpp"
-#import "SFBExtAudioFile.hpp"
+#import "SFBCABufferList.hpp"
+#import "SFBCAPropertyAddress.hpp"
+#import "SFBCAStreamBasicDescription.hpp"
+#import "SFBCATimeStamp.hpp"
+#import "SFBCAExtAudioFile.hpp"
 #import "SFBHALAudioStream.hpp"
 #import "SFBHALAudioSystemObject.hpp"
 
 namespace {
-	const size_t kScheduledAudioSliceCount = 16;
 
-	SFBAudioBufferList ReadFileContents(CFURLRef url, const AudioStreamBasicDescription& format)
-	{
-		SFBExtAudioFile eaf;
-		eaf.OpenURL(url);
+const size_t kScheduledAudioSliceCount = 16;
 
-		eaf.SetClientDataFormat(format);
-		auto frameLength = eaf.FrameLength();
-		if(frameLength > std::numeric_limits<UInt32>::max())
-			throw std::overflow_error("Frame length > std::numeric_limits<UInt32>::max()");
+SFB::CABufferList ReadFileContents(CFURLRef url, const AudioStreamBasicDescription& format)
+{
+	SFB::CAExtAudioFile eaf;
+	eaf.OpenURL(url);
 
-		SFBAudioBufferList abl;
-		if(!abl.Allocate(format, static_cast<UInt32>(frameLength)))
-			throw std::bad_alloc();
-		eaf.Read(abl);
+	eaf.SetClientDataFormat(format);
+	auto frameLength = eaf.FrameLength();
+	if(frameLength > std::numeric_limits<UInt32>::max())
+		throw std::overflow_error("Frame length > std::numeric_limits<UInt32>::max()");
 
-		return abl;
-	}
+	SFB::CABufferList abl;
+	if(!abl.Allocate(format, static_cast<UInt32>(frameLength)))
+		throw std::bad_alloc();
+	eaf.Read(abl);
+
+	return abl;
+}
+
 }
 
 class SFBScheduledAudioSlice : public ScheduledAudioSlice
@@ -72,7 +74,7 @@ public:
 SFBAUv2IO::SFBAUv2IO()
 : mInputUnit(nullptr), mPlayerUnit(nullptr), mMixerUnit(nullptr), mOutputUnit(nullptr), mFirstInputSampleTime(-1), mFirstOutputSampleTime(-1), mScheduledAudioSlices(nullptr)
 {
-	SFBHALAudioSystemObject systemObject;
+	SFB::HALAudioSystemObject systemObject;
 	Initialize(systemObject.DefaultInputDevice(), systemObject.DefaultOutputDevice());
 	mScheduledAudioSlices = new SFBScheduledAudioSlice [kScheduledAudioSliceCount];
 }
@@ -121,22 +123,22 @@ SFBAUv2IO::~SFBAUv2IO()
 	delete [] mScheduledAudioSlices;
 }
 
-SFBHALAudioDevice SFBAUv2IO::InputDevice() const
+SFB::HALAudioDevice SFBAUv2IO::InputDevice() const
 {
 	AudioObjectID deviceID;
 	UInt32 size = sizeof(deviceID);
 	auto result = AudioUnitGetProperty(mInputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &size);
 	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
-	return SFBHALAudioDevice(deviceID);
+	return SFB::HALAudioDevice(deviceID);
 }
 
-SFBHALAudioDevice SFBAUv2IO::OutputDevice() const
+SFB::HALAudioDevice SFBAUv2IO::OutputDevice() const
 {
 	AudioObjectID deviceID;
 	UInt32 size = sizeof(deviceID);
 	auto result = AudioUnitGetProperty(mOutputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &size);
 	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
-	return SFBHALAudioDevice(deviceID);
+	return SFB::HALAudioDevice(deviceID);
 }
 
 void SFBAUv2IO::Start()
@@ -224,12 +226,12 @@ bool SFBAUv2IO::InputIsRunning() const
 
 void SFBAUv2IO::Play(CFURLRef url)
 {
-	PlayAt(url, SFBAudioTimeStamp{});
+	PlayAt(url, SFB::CATimeStamp{});
 }
 
 void SFBAUv2IO::PlayAt(CFURLRef url, const AudioTimeStamp& timeStamp)
 {
-	SFBAudioStreamBasicDescription format;
+	SFB::CAStreamBasicDescription format;
 	UInt32 size = sizeof(format);
 	auto result = AudioUnitGetProperty(mPlayerUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, &size);
 	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
@@ -237,7 +239,7 @@ void SFBAUv2IO::PlayAt(CFURLRef url, const AudioTimeStamp& timeStamp)
 	auto abl = ReadFileContents(url, format);
 
 	SFBScheduledAudioSlice *slice = nullptr;
-	for(auto i = 0; i < kScheduledAudioSliceCount; ++i) {
+	for(size_t i = 0; i < kScheduledAudioSliceCount; ++i) {
 		if(mScheduledAudioSlices[i].mAvailable) {
 			slice = mScheduledAudioSlices + i;
 			break;
@@ -258,13 +260,13 @@ void SFBAUv2IO::PlayAt(CFURLRef url, const AudioTimeStamp& timeStamp)
 	result = AudioUnitSetProperty(mPlayerUnit, kAudioUnitProperty_ScheduleAudioSlice, kAudioUnitScope_Global, 0, slice, sizeof(*slice));
 	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_ScheduleAudioSlice)");
 
-	SFBAudioTimeStamp currentPlayTime;
+	SFB::CATimeStamp currentPlayTime;
 	size = sizeof(currentPlayTime);
 	result = AudioUnitGetProperty(mPlayerUnit, kAudioUnitProperty_CurrentPlayTime, kAudioUnitScope_Global, 0, &currentPlayTime, &size);
 	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_CurrentPlayTime)");
 
 	if(currentPlayTime.SampleTimeIsValid() && currentPlayTime.mSampleTime == -1) {
-		SFBAudioTimeStamp startTime{-1.0};
+		SFB::CATimeStamp startTime{-1.0};
 		result = AudioUnitSetProperty(mPlayerUnit, kAudioUnitProperty_ScheduleStartTimeStamp, kAudioUnitScope_Global, 0, &startTime, sizeof(startTime));
 		SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_ScheduleStartTimeStamp)");
 	}
@@ -293,17 +295,17 @@ void SFBAUv2IO::GetOutputFormat(AudioStreamBasicDescription& format)
 
 void SFBAUv2IO::SetInputRecordingURL(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format)
 {
-	mInputRecorder = std::make_unique<SFBAudioUnitRecorder>(mInputUnit, url, fileType, format, 1);
+	mInputRecorder = std::make_unique<SFB::AudioUnitRecorder>(mInputUnit, url, fileType, format, 1);
 }
 
 void SFBAUv2IO::SetPlayerRecordingURL(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format)
 {
-	mPlayerRecorder = std::make_unique<SFBAudioUnitRecorder>(mPlayerUnit, url, fileType, format);
+	mPlayerRecorder = std::make_unique<SFB::AudioUnitRecorder>(mPlayerUnit, url, fileType, format);
 }
 
 void SFBAUv2IO::SetOutputRecordingURL(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format)
 {
-	mOutputRecorder = std::make_unique<SFBAudioUnitRecorder>(mOutputUnit, url, fileType, format);
+	mOutputRecorder = std::make_unique<SFB::AudioUnitRecorder>(mOutputUnit, url, fileType, format);
 }
 
 void SFBAUv2IO::Initialize(AudioObjectID inputDeviceID, AudioObjectID outputDeviceID)
@@ -321,7 +323,7 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDeviceID)
 	if(inputDeviceID == kAudioObjectUnknown)
 		throw std::invalid_argument("inputDevice == kAudioObjectUnknown");
 
-	SFBHALAudioDevice inputDevice(inputDeviceID);
+	SFB::HALAudioDevice inputDevice(inputDeviceID);
 #if DEBUG
 	auto deviceName = inputDevice.Name();
 	if(deviceName)
@@ -366,18 +368,18 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDeviceID)
 	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global, 0, &inputCallback, sizeof(inputCallback));
 	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_SetInputCallback)");
 
-	SFBAudioObjectPropertyAddress theAddress(kAudioDevicePropertyNominalSampleRate);
+	SFB::CAPropertyAddress theAddress(kAudioDevicePropertyNominalSampleRate);
 
 	auto inputDeviceSampleRate = inputDevice.NominalSampleRate();
 
-	SFBAudioStreamBasicDescription inputUnitInputFormat;
+	SFB::CAStreamBasicDescription inputUnitInputFormat;
 	UInt32 size = sizeof(inputUnitInputFormat);
 	result = AudioUnitGetProperty(mInputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &inputUnitInputFormat, &size);
 	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
 //	CFShow(inputUnitInputFormat.Description("input AU input format:  "));
 
 
-	SFBAudioStreamBasicDescription inputUnitOutputFormat;
+	SFB::CAStreamBasicDescription inputUnitOutputFormat;
 	size = sizeof(inputUnitOutputFormat);
 	result = AudioUnitGetProperty(mInputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &inputUnitOutputFormat, &size);
 	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
@@ -417,7 +419,7 @@ void SFBAUv2IO::CreateOutputAU(AudioObjectID outputDeviceID)
 
 #if DEBUG
 	{
-		SFBHALAudioDevice outputDevice(outputDeviceID);
+		SFB::HALAudioDevice outputDevice(outputDeviceID);
 		auto deviceName = outputDevice.Name();
 		if(deviceName)
 			os_log_debug(OS_LOG_DEFAULT, "Using output device %{public}@ (0x%x)", deviceName.Object(), outputDeviceID);
@@ -524,12 +526,12 @@ UInt32 SFBAUv2IO::MinimumInputLatency() const
 {
 	auto inputDevice = InputDevice();
 
-	auto safetyOffset = inputDevice.SafetyOffset(SFBHALAudioObjectDirectionalScope::input);
+	auto safetyOffset = inputDevice.SafetyOffset(SFB::HALAudioObjectDirectionalScope::input);
 	auto bufferFrameSize = inputDevice.BufferFrameSize();
 
 #if DEBUG
-	auto latency = inputDevice.Latency(SFBHALAudioObjectDirectionalScope::input);
-	auto streams = inputDevice.Streams(SFBHALAudioObjectDirectionalScope::input);
+	auto latency = inputDevice.Latency(SFB::HALAudioObjectDirectionalScope::input);
+	auto streams = inputDevice.Streams(SFB::HALAudioObjectDirectionalScope::input);
 
 	for(auto stream : streams) {
 		auto streamLatency = stream.Latency();
@@ -546,12 +548,12 @@ UInt32 SFBAUv2IO::MinimumOutputLatency() const
 {
 	auto outputDevice = OutputDevice();
 
-	auto safetyOffset = outputDevice.SafetyOffset(SFBHALAudioObjectDirectionalScope::output);
+	auto safetyOffset = outputDevice.SafetyOffset(SFB::HALAudioObjectDirectionalScope::output);
 	auto bufferFrameSize = outputDevice.BufferFrameSize();
 
 #if DEBUG
-	auto latency = outputDevice.Latency(SFBHALAudioObjectDirectionalScope::output);
-	auto streams = outputDevice.Streams(SFBHALAudioObjectDirectionalScope::output);
+	auto latency = outputDevice.Latency(SFB::HALAudioObjectDirectionalScope::output);
+	auto streams = outputDevice.Streams(SFB::HALAudioObjectDirectionalScope::output);
 
 	for(auto stream : streams) {
 		auto streamLatency = stream.Latency();
@@ -577,7 +579,7 @@ OSStatus SFBAUv2IO::InputRenderCallback(void *inRefCon, AudioUnitRenderActionFla
 	if(result != noErr)
 		os_log_error(OS_LOG_DEFAULT, "Error rendering input: %d", result);
 
-	if(!THIS->mInputRingBuffer.Write(THIS->mInputBufferList, inNumberFrames, inTimeStamp->mSampleTime))
+	if(!THIS->mInputRingBuffer.Write(THIS->mInputBufferList, inNumberFrames, static_cast<int64_t>(inTimeStamp->mSampleTime)))
 		os_log_debug(OS_LOG_DEFAULT, "SFBCARingBuffer::Write failed at sample time %.0f", inTimeStamp->mSampleTime);
 
 	return result;
@@ -590,7 +592,7 @@ OSStatus SFBAUv2IO::OutputRenderCallback(void *inRefCon, AudioUnitRenderActionFl
 	// Input not yet running
 	if(THIS->mFirstInputSampleTime < 0) {
 		*ioActionFlags = kAudioUnitRenderAction_OutputIsSilence;
-		for(auto i = 0; i < ioData->mNumberBuffers; ++i)
+		for(UInt32 i = 0; i < ioData->mNumberBuffers; ++i)
 			std::memset(ioData->mBuffers[i].mData, 0, ioData->mBuffers[i].mDataByteSize);
 		return noErr;
 	}
@@ -610,7 +612,7 @@ OSStatus SFBAUv2IO::OutputRenderCallback(void *inRefCon, AudioUnitRenderActionFl
 #endif
 
 		*ioActionFlags = kAudioUnitRenderAction_OutputIsSilence;
-		for(auto i = 0; i < ioData->mNumberBuffers; ++i)
+		for(UInt32 i = 0; i < ioData->mNumberBuffers; ++i)
 			std::memset(ioData->mBuffers[i].mData, 0, ioData->mBuffers[i].mDataByteSize);
 		return noErr;
 	}
