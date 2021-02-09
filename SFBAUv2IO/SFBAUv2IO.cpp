@@ -57,14 +57,12 @@ public:
 
 	~SFBScheduledAudioSlice()
 	{
-		if(mBufferList)
-			std::free(mBufferList);
+		std::free(mBufferList);
 	}
 
 	void Clear()
 	{
-		if(mBufferList)
-			std::free(mBufferList);
+		std::free(mBufferList);
 		std::memset(this, 0, sizeof(ScheduledAudioSlice));
 	}
 
