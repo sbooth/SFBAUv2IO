@@ -128,7 +128,7 @@ SFB::HALAudioDevice SFBAUv2IO::InputDevice() const
 	AudioObjectID deviceID;
 	UInt32 size = sizeof(deviceID);
 	auto result = AudioUnitGetProperty(mInputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
 	return SFB::HALAudioDevice(deviceID);
 }
 
@@ -137,7 +137,7 @@ SFB::HALAudioDevice SFBAUv2IO::OutputDevice() const
 	AudioObjectID deviceID;
 	UInt32 size = sizeof(deviceID);
 	auto result = AudioUnitGetProperty(mOutputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice)");
 	return SFB::HALAudioDevice(deviceID);
 }
 
@@ -154,9 +154,9 @@ void SFBAUv2IO::Start()
 		mOutputRecorder->Start();
 
 	auto result = AudioOutputUnitStart(mInputUnit);
-	SFBThrowIfAudioUnitError(result, "AudioOutputUnitStart (mInputUnit)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioOutputUnitStart (mInputUnit)");
 	result = AudioOutputUnitStart(mOutputUnit);
-	SFBThrowIfAudioUnitError(result, "AudioOutputUnitStart (mOutputUnit)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioOutputUnitStart (mOutputUnit)");
 }
 
 void SFBAUv2IO::StartAt(const AudioTimeStamp& timeStamp)
@@ -171,9 +171,9 @@ void SFBAUv2IO::StartAt(const AudioTimeStamp& timeStamp)
 
 	// For some reason this is causing errors in AudioOutputUnitStart()
 	auto result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_StartTime, kAudioUnitScope_Global, 0, &startAtTime, sizeof(startAtTime));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_StartTime)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_StartTime)");
 	result = AudioUnitSetProperty(mOutputUnit, kAudioOutputUnitProperty_StartTime, kAudioUnitScope_Global, 0, &startAtTime, sizeof(startAtTime));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_StartTime)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_StartTime)");
 
 	Start();
 }
@@ -184,11 +184,11 @@ void SFBAUv2IO::Stop()
 		return;
 
 	auto result = AudioOutputUnitStop(mInputUnit);
-	SFBThrowIfAudioUnitError(result, "AudioOutputUnitStop (mInputUnit)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioOutputUnitStop (mInputUnit)");
 	result = AudioOutputUnitStop(mOutputUnit);
-	SFBThrowIfAudioUnitError(result, "AudioOutputUnitStop (mOutputUnit)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioOutputUnitStop (mOutputUnit)");
 	result = AudioUnitReset(mPlayerUnit, kAudioUnitScope_Global, 0);
-	SFBThrowIfAudioUnitError(result, "AudioUnitReset (mPlayerUnit)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitReset (mPlayerUnit)");
 
 	if(mInputRecorder)
 		mInputRecorder->Stop();
@@ -211,7 +211,7 @@ bool SFBAUv2IO::OutputIsRunning() const
 	UInt32 value;
 	UInt32 size = sizeof(value);
 	auto result = AudioUnitGetProperty(mOutputUnit, kAudioOutputUnitProperty_IsRunning, kAudioUnitScope_Global, 0, &value, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_IsRunning)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_IsRunning)");
 	return value != 0;
 }
 
@@ -220,7 +220,7 @@ bool SFBAUv2IO::InputIsRunning() const
 	UInt32 value;
 	UInt32 size = sizeof(value);
 	auto result = AudioUnitGetProperty(mInputUnit, kAudioOutputUnitProperty_IsRunning, kAudioUnitScope_Global, 0, &value, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_IsRunning)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioOutputUnitProperty_IsRunning)");
 	return value != 0;
 }
 
@@ -234,7 +234,7 @@ void SFBAUv2IO::PlayAt(CFURLRef url, const AudioTimeStamp& timeStamp)
 	SFB::CAStreamBasicDescription format;
 	UInt32 size = sizeof(format);
 	auto result = AudioUnitGetProperty(mPlayerUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
 
 	auto abl = ReadFileContents(url, format);
 
@@ -258,17 +258,17 @@ void SFBAUv2IO::PlayAt(CFURLRef url, const AudioTimeStamp& timeStamp)
 	slice->mAvailable 				= false;
 
 	result = AudioUnitSetProperty(mPlayerUnit, kAudioUnitProperty_ScheduleAudioSlice, kAudioUnitScope_Global, 0, slice, sizeof(*slice));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_ScheduleAudioSlice)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_ScheduleAudioSlice)");
 
 	SFB::CATimeStamp currentPlayTime;
 	size = sizeof(currentPlayTime);
 	result = AudioUnitGetProperty(mPlayerUnit, kAudioUnitProperty_CurrentPlayTime, kAudioUnitScope_Global, 0, &currentPlayTime, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_CurrentPlayTime)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_CurrentPlayTime)");
 
 	if(currentPlayTime.SampleTimeIsValid() && currentPlayTime.mSampleTime == -1) {
 		SFB::CATimeStamp startTime{-1.0};
 		result = AudioUnitSetProperty(mPlayerUnit, kAudioUnitProperty_ScheduleStartTimeStamp, kAudioUnitScope_Global, 0, &startTime, sizeof(startTime));
-		SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_ScheduleStartTimeStamp)");
+		SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_ScheduleStartTimeStamp)");
 	}
 }
 
@@ -276,21 +276,21 @@ void SFBAUv2IO::GetInputFormat(AudioStreamBasicDescription& format)
 {
 	UInt32 size = sizeof(format);
 	auto result = AudioUnitGetProperty(mInputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &format, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
 }
 
 void SFBAUv2IO::GetPlayerFormat(AudioStreamBasicDescription& format)
 {
 	UInt32 size = sizeof(format);
 	auto result = AudioUnitGetProperty(mPlayerUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
 }
 
 void SFBAUv2IO::GetOutputFormat(AudioStreamBasicDescription& format)
 {
 	UInt32 size = sizeof(format);
 	auto result = AudioUnitGetProperty(mOutputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &format, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
 }
 
 void SFBAUv2IO::SetInputRecordingURL(CFURLRef url, AudioFileTypeID fileType, const AudioStreamBasicDescription& format)
@@ -343,22 +343,22 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDeviceID)
 		throw std::runtime_error("kAudioUnitSubType_HALOutput missing");
 
 	auto result = AudioComponentInstanceNew(component, &mInputUnit);
-	SFBThrowIfAudioObjectError(result, "AudioComponentInstanceNew");
+	SFB::ThrowIfCAAudioObjectError(result, "AudioComponentInstanceNew");
 
 	UInt32 enableIO = 1;
 	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &enableIO, sizeof(enableIO));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_EnableIO)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_EnableIO)");
 
 	enableIO = 0;
 	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &enableIO, sizeof(enableIO));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_EnableIO)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_EnableIO)");
 
 	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &inputDeviceID, sizeof(inputDeviceID));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice)");
 
 	UInt32 startAtZero = 0;
 	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_StartTimestampsAtZero, kAudioUnitScope_Global, 0, &startAtZero, sizeof(startAtZero));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_StartTimestampsAtZero)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_StartTimestampsAtZero)");
 
 	AURenderCallbackStruct inputCallback = {
 		.inputProc = InputRenderCallback,
@@ -366,7 +366,7 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDeviceID)
 	};
 
 	result = AudioUnitSetProperty(mInputUnit, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global, 0, &inputCallback, sizeof(inputCallback));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_SetInputCallback)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_SetInputCallback)");
 
 	SFB::CAPropertyAddress theAddress(kAudioDevicePropertyNominalSampleRate);
 
@@ -375,14 +375,14 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDeviceID)
 	SFB::CAStreamBasicDescription inputUnitInputFormat;
 	UInt32 size = sizeof(inputUnitInputFormat);
 	result = AudioUnitGetProperty(mInputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &inputUnitInputFormat, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
 //	CFShow(inputUnitInputFormat.Description("input AU input format:  "));
 
 
 	SFB::CAStreamBasicDescription inputUnitOutputFormat;
 	size = sizeof(inputUnitOutputFormat);
 	result = AudioUnitGetProperty(mInputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &inputUnitOutputFormat, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat)");
 
 	assert(inputDeviceSampleRate == inputUnitInputFormat.mSampleRate);
 	
@@ -390,7 +390,7 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDeviceID)
 	inputUnitOutputFormat.mSampleRate = inputUnitInputFormat.mSampleRate;
 	inputUnitOutputFormat.mChannelsPerFrame = inputUnitInputFormat.mChannelsPerFrame;
 	result = AudioUnitSetProperty(mInputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &inputUnitOutputFormat, sizeof(inputUnitOutputFormat));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_StreamFormat)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_StreamFormat)");
 //	CFShow(inputUnitOutputFormat.Description("input AU output format: "));
 
 //	UInt32 maxFramesPerSlice;
@@ -401,7 +401,7 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDeviceID)
 	UInt32 bufferFrameSize;
 	size = sizeof(bufferFrameSize);
 	result = AudioUnitGetProperty(mInputUnit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0, &bufferFrameSize, &size);
-	SFBThrowIfAudioUnitError(result, "AudioUnitGetProperty (kAudioDevicePropertyBufferFrameSize)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitGetProperty (kAudioDevicePropertyBufferFrameSize)");
 
 	if(!mInputBufferList.Allocate(inputUnitOutputFormat, bufferFrameSize))
 		throw std::bad_alloc();
@@ -409,7 +409,7 @@ void SFBAUv2IO::CreateInputAU(AudioObjectID inputDeviceID)
 		throw std::bad_alloc();
 
 	result = AudioUnitInitialize(mInputUnit);
-	SFBThrowIfAudioUnitError(result, "AudioUnitInitialize");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitInitialize");
 }
 
 void SFBAUv2IO::CreateOutputAU(AudioObjectID outputDeviceID)
@@ -439,14 +439,14 @@ void SFBAUv2IO::CreateOutputAU(AudioObjectID outputDeviceID)
 		throw std::runtime_error("kAudioUnitSubType_HALOutput missing");
 
 	auto result = AudioComponentInstanceNew(component, &mOutputUnit);
-	SFBThrowIfAudioObjectError(result, "AudioComponentInstanceNew");
+	SFB::ThrowIfCAAudioObjectError(result, "AudioComponentInstanceNew");
 
 	result = AudioUnitSetProperty(mOutputUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &outputDeviceID, sizeof(outputDeviceID));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice)");
 
 	UInt32 startAtZero = 0;
 	result = AudioUnitSetProperty(mOutputUnit, kAudioOutputUnitProperty_StartTimestampsAtZero, kAudioUnitScope_Global, 0, &startAtZero, sizeof(startAtZero));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_StartTimestampsAtZero)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioOutputUnitProperty_StartTimestampsAtZero)");
 
 	AURenderCallbackStruct outputCallback = {
 		.inputProc = OutputRenderCallback,
@@ -454,10 +454,10 @@ void SFBAUv2IO::CreateOutputAU(AudioObjectID outputDeviceID)
 	};
 
 	result = AudioUnitSetProperty(mOutputUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 0, &outputCallback, sizeof(outputCallback));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_SetRenderCallback)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_SetRenderCallback)");
 
 	result = AudioUnitInitialize(mOutputUnit);
-	SFBThrowIfAudioUnitError(result, "AudioUnitInitialize");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitInitialize");
 }
 
 void SFBAUv2IO::CreateMixerAU()
@@ -475,7 +475,7 @@ void SFBAUv2IO::CreateMixerAU()
 		throw std::runtime_error("kAudioUnitSubType_MultiChannelMixer missing");
 
 	auto result = AudioComponentInstanceNew(component, &mMixerUnit);
-	SFBThrowIfAudioObjectError(result, "AudioComponentInstanceNew");
+	SFB::ThrowIfCAAudioObjectError(result, "AudioComponentInstanceNew");
 }
 
 void SFBAUv2IO::CreatePlayerAU()
@@ -493,7 +493,7 @@ void SFBAUv2IO::CreatePlayerAU()
 		throw std::runtime_error("kAudioUnitSubType_ScheduledSoundPlayer missing");
 
 	auto result = AudioComponentInstanceNew(component, &mPlayerUnit);
-	SFBThrowIfAudioObjectError(result, "AudioComponentInstanceNew");
+	SFB::ThrowIfCAAudioObjectError(result, "AudioComponentInstanceNew");
 }
 
 void SFBAUv2IO::BuildGraph()
@@ -506,20 +506,20 @@ void SFBAUv2IO::BuildGraph()
 	};
 
 	auto result = AudioUnitSetProperty(mMixerUnit, kAudioUnitProperty_MakeConnection, kAudioUnitScope_Input, 0, &conn, sizeof(conn));
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_MakeConnection)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetProperty (kAudioUnitProperty_MakeConnection)");
 
 	result = AudioUnitInitialize(mMixerUnit);
-	SFBThrowIfAudioUnitError(result, "AudioUnitInitialize");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitInitialize");
 
 	result = AudioUnitInitialize(mPlayerUnit);
-	SFBThrowIfAudioUnitError(result, "AudioUnitInitialize");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitInitialize");
 
 	// Set mixer volumes
 
 	result = AudioUnitSetParameter(mMixerUnit, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input, 0, 1, 0);
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetParameter (kMultiChannelMixerParam_Volume)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetParameter (kMultiChannelMixerParam_Volume)");
 	result = AudioUnitSetParameter(mMixerUnit, kMultiChannelMixerParam_Volume, kAudioUnitScope_Output, 0, 1, 0);
-	SFBThrowIfAudioUnitError(result, "AudioUnitSetParameter (kMultiChannelMixerParam_Volume)");
+	SFB::ThrowIfCAAudioUnitError(result, "AudioUnitSetParameter (kMultiChannelMixerParam_Volume)");
 }
 
 UInt32 SFBAUv2IO::MinimumInputLatency() const
